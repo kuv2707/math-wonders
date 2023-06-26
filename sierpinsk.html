@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sierpinsk</title>
+</head>
+<style>
+    *{
+        overflow: hidden;
+        margin:0;
+        padding:0;
+    }
+</style>
+<body>
+    <h1>Sierpinsk</h1>
+    <canvas id="canvas" width="500" height="500"></canvas>
+    <script>
+        const canvas = document.getElementById("canvas")
+        let ctx
+        const ITERATIONS = 10000
+        const drawPoint = ({ x, y }) =>
+        {
+            ctx.fillRect(x - 1.5, y - 1.5, 3, 3)
+        }
+        class Point
+        {
+            constructor(x, y)
+            {
+                this.x = x
+                this.y = y
+            }
+        }
+        let p1, p2, p3
+        let points
+        const randomOrigPoint = () => points[Math.random() * points.length | 0]
+
+        let latestPt //random point inside the triangle
+        let k = 0.5
+        document.body.style.backgroundColor = "black"
+
+        
+        // setTimeout(() =>
+        // {
+        //     setInterval(() =>
+        //     {
+        //         let pt = randomOrigPoint()
+        //         latestPt.x = latestPt.x+(pt.x-latestPt.x)*k
+        //         latestPt.y = latestPt.y+(pt.y-latestPt.y)*k
+        //         drawPoint(latestPt)
+        //     }, 0.0001)
+        // }, 1000)
+
+
+            document.addEventListener("keydown",e=>
+            {
+                if(e.key=="ArrowUp")
+                {
+                    k+=0.01
+                }
+                if(e.key=="ArrowDown")
+                {
+                    k-=0.01
+                }
+                if(e.key=="ArrowLeft")
+                {
+                    k-=0.1
+                }
+                if(e.key=="ArrowRight")
+                {
+                    k+=0.1
+                }
+                window.dispatchEvent(new Event("resize"))
+            })
+
+
+        window.addEventListener("resize", () =>
+        {
+            ctx = canvas.getContext("2d")
+            canvas.width = window.innerWidth
+            canvas.height = window.innerHeight
+            ctx.fillStyle = "black"
+            ctx.fillRect(0, 0, window.innerWidth, window.innerHeight)
+            ctx.fillStyle = "white"
+            p1 = new Point(window.innerWidth / 2, 0)
+            p2 = new Point(0, window.innerHeight - 100)
+            p3 = new Point(window.innerWidth - 100, window.innerHeight - 100)
+            points = [p1, p2, p3]
+            latestPt = new Point((p1.x + p2.x + p3.x) / 3, (p1.y + p2.y + p3.y) / 3)
+            ctx.strokeStyle = "red"
+            ctx.beginPath()
+            ctx.moveTo(p1.x, p1.y)
+            ctx.lineTo(p2.x, p2.y)
+            ctx.lineTo(p3.x, p3.y)
+            ctx.lineTo(p1.x, p1.y)
+            ctx.stroke()
+            ctx.closePath()
+            ctx.strokeStyle = "white"
+
+            for(let i = 0; i < ITERATIONS; i++)
+            {
+                let pt = randomOrigPoint()
+                latestPt.x = latestPt.x + (pt.x - latestPt.x) * k
+                latestPt.y = latestPt.y + (pt.y - latestPt.y) * k
+                drawPoint(latestPt)
+            }
+        })
+        window.dispatchEvent(new Event("resize"))
+    </script>
+</body>
+
+</html>

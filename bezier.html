@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bézier</title>
+</head>
+<body>
+    <canvas></canvas>
+    <!-- <div id="optionsContainer">
+        <input id="ctrl" type="checkbox"></input>
+        <label for="ctrl">Remove</label><br>
+        <input id="spc" type="checkbox"></input>
+        <label for="spc">Hide</label>
+    </div> -->
+    <style>
+        *
+        {
+            user-select: none;
+        }
+        body
+        {
+            background-color: rgb(31, 30, 30);
+            margin:0;
+        }
+        #optionsContainer
+        {
+            position: absolute;
+            border:2px solid white;
+            border-radius: 8px;
+        }
+        #optionsContainer label,input
+        {
+            color:white;
+            user-select: none;
+        }
+        .markers
+        {
+            position: absolute;
+            width:18px;
+            height:18px;
+            border-radius: 20px;
+            background-color: white;
+            touch-action: none;
+        }
+        canvas
+        {
+            position: fixed;
+            z-index: -1;
+            width:100vw;
+            height:100vh;
+        }
+    </style>
+    <div id="thing"></div>
+    <div id="thing"></div>
+    <div id="thing"></div>
+    <div id="thing"></div>
+    <div id="thing"></div>
+    <script>
+        console.log(document.querySelectorAll("#thing"))
+        
+        let current;
+        let markers=[];
+        function pointerMove(e)
+        {
+            if(current.move==undefined)return;
+            current.move(e.pageX,e.pageY);
+            if(current.slave)
+            current.slave.move(e.pageX+current.slave.diff.x,e.pageY+current.slave.diff.y);
+            if(current.master)
+            {
+                current.diff={x:current.translateCoords.x-current.master.translateCoords.x,
+                y:current.translateCoords.y-current.master.translateCoords.y}
+            }
+            update();
+        }
+        function addDataPoint(e)
+        {
+            if(e.button==2)
+            return;
+            for(let i=0;i<2;i++)
+            {
+                let m=document.createElement("button");
+                m.classList.add("markers");
+                markers.push(m);
+                addTransformManager(m);
+                m.addEventListener("pointerdown",(e)=>
+                {
+                    current=e.target;
+                    canvas.addEventListener("pointermove",pointerMove)
+                });
+                m.addEventListener("pointerdown",function(e)
+                {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if(remove.checked &&  e.target.slave)
+                    {
+                        let ind=markers.indexOf(e.target);
+                        markers.splice(ind,2);
+                        e.target.remove();
+                        e.target.slave.remove();
+                        update();
+                    }
+                })
+                
+                document.body.append(m);
+                m.move(e.pageX+i*30,e.pageY+i*30);
+            }
+            document.body.addEventListener("pointerup",(e)=>
+            {
+                current=null;
+                canvas.removeEventListener("pointermove",pointerMove)
+            });
+            markers.at(-2).slave=markers.at(-1)
+            markers.at(-1).diff={x:30,y:30}
+            markers.at(-1).master=markers.at(-2)
+            update()
+        }
+        
+        let canvas=document.querySelector("canvas")
+        //let spc=document.querySelector("#spc")
+        //let remove=document.querySelector("#ctrl")
+        let spc={checked:false}
+        let remove={checked:false}
+        window.addEventListener("resize",()=>
+        {
+            canvas.width=window.innerWidth
+            canvas.height=window.innerHeight
+            g=canvas.getContext("2d")
+            g.fillStyle="yellow"
+            g.lineWidth=10
+            update()
+        })
+        document.addEventListener("keydown",(e)=>{
+            console.log(e)
+            switch(e.key)
+            {
+                case " ":
+                    spc.checked=!spc.checked
+                    markers.forEach((ele)=>ele.style.opacity=spc.checked?"0":"1")
+
+                    break
+                case "Control":
+                    remove.checked=!remove.checked
+            }
+            update();
+        });
+        let g
+        window.dispatchEvent(new Event("resize"))
+        canvas.addEventListener("pointerdown",addDataPoint)
+
+        function update()
+        {
+            g.clearRect(0,0,canvas.width,canvas.height)
+            function sectF(pi,pf,i)
+            {
+                return {x:pi.x+i*(pf.x-pi.x),
+                y:pi.y+(pf.y-pi.y)*i}
+            }
+            for(let i=0;i<markers.length-2;i+=2)
+            {
+                let first=markers[i+0].translateCoords
+                let first_d=Object.assign({},markers[i+1].translateCoords)
+                let second=markers[i+2].translateCoords
+                let second_d=markers[i+3].translateCoords
+                if(i!=0)
+                {
+                    first_d.x=-(first_d.x-first.x)+first.x
+                    first_d.y=-(first_d.y-first.y)+first.y
+                }
+                for(let i=0;i<=1;i+=0.001)
+                {
+                    let p11=sectF(first,first_d,i)
+                    let p12=sectF(first_d,second_d,i)
+                    let p13=sectF(second_d,second,i)
+                    let p21=sectF(p11,p12,i)
+                    let p22=sectF(p12,p13,i)
+                    let p3=sectF(p21,p22,i)
+                    g.fillRect(p3.x,p3.y,10,10)
+                }
+                if(spc.checked)
+                continue
+                g.strokeStyle="red"
+                g.beginPath()
+                g.moveTo(first.x+10,first.y+10)
+                g.lineTo(first_d.x+10,first_d.y+10)
+                g.moveTo(second.x+10,second.y+10)
+                g.lineTo(second_d.x+10,second_d.y+10)
+                g.stroke()
+            }
+        }
+        function addTransformManager(go)
+        {
+            go.translateCoords={x:0,y:0}
+            go.updateAppearance=function()
+            {
+                this.style.transform=
+                `translate(${this.translateCoords.x}px,${this.translateCoords.y}px)`
+            }
+            go.move=function(xx,yy)
+            {
+                this.translateCoords.x=xx
+                this.translateCoords.y=yy
+                this.updateAppearance()
+            }
+        }
+        
+    </script>
+</body>
+</html
