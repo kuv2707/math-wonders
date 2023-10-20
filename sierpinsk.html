@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sierpinsk</title>
+    <title>Sierpinski</title>
 </head>
 <style>
     *{
@@ -14,15 +14,15 @@
     }
 </style>
 <body>
-    <h1>Sierpinsk</h1>
     <canvas id="canvas" width="500" height="500"></canvas>
     <script>
         const canvas = document.getElementById("canvas")
         let ctx
+        const SIZ=3
         const ITERATIONS = 10000
         const drawPoint = ({ x, y }) =>
         {
-            ctx.fillRect(x - 1.5, y - 1.5, 3, 3)
+            ctx.fillRect(x-SIZ/2 , y-SIZ/2, SIZ, SIZ)
         }
         class Point
         {
@@ -52,30 +52,37 @@
         //     }, 0.0001)
         // }, 1000)
 
-
-            document.addEventListener("keydown",e=>
+            let mouseX,mouseY
+        document.addEventListener("pointerdown",e=>
+        {
+            mouseX = e.clientX
+            mouseY = e.clientY
+            refresh()
+        })
+        document.addEventListener("keydown",e=>
+        {
+            if(e.key=="ArrowUp")
             {
-                if(e.key=="ArrowUp")
-                {
-                    k+=0.01
-                }
-                if(e.key=="ArrowDown")
-                {
-                    k-=0.01
-                }
-                if(e.key=="ArrowLeft")
-                {
-                    k-=0.1
-                }
-                if(e.key=="ArrowRight")
-                {
-                    k+=0.1
-                }
-                window.dispatchEvent(new Event("resize"))
-            })
+                k+=0.01
+            }
+            if(e.key=="ArrowDown")
+            {
+                k-=0.01
+            }
+            if(e.key=="ArrowLeft")
+            {
+                k-=0.1
+            }
+            if(e.key=="ArrowRight")
+            {
+                k+=0.1
+            }
+            refresh()
+        })
 
 
-        window.addEventListener("resize", () =>
+        window.addEventListener("resize", refresh)
+        function refresh()
         {
             ctx = canvas.getContext("2d")
             canvas.width = window.innerWidth
@@ -87,7 +94,7 @@
             p2 = new Point(0, window.innerHeight - 100)
             p3 = new Point(window.innerWidth - 100, window.innerHeight - 100)
             points = [p1, p2, p3]
-            latestPt = new Point((p1.x + p2.x + p3.x) / 3, (p1.y + p2.y + p3.y) / 3)
+            latestPt = new Point(mouseX==undefined?(p1.x + p2.x + p3.x) / 3:mouseX, mouseY==undefined?(p1.y + p2.y + p3.y) / 3:mouseY)
             ctx.strokeStyle = "red"
             ctx.beginPath()
             ctx.moveTo(p1.x, p1.y)
@@ -105,8 +112,7 @@
                 latestPt.y = latestPt.y + (pt.y - latestPt.y) * k
                 drawPoint(latestPt)
             }
-        })
-        window.dispatchEvent(new Event("resize"))
+        }
     </script>
 </body>
 

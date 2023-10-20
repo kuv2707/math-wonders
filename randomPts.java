@@ -20,7 +20,7 @@ class randomPts extends JPanel
         {
             public void actionPerformed(ActionEvent e)
             {
-                list.add(new Point(    (int)(getWidth()*Math.pow(Math.random(),0.2)) ,  (int)((2000*Math.PI)*Math.pow(Math.random(),1))     ));
+                list.add(new Point(    (int)(getWidth()*Math.pow(Math.random(),5)) ,  (int)((2000*Math.PI)*Math.pow(Math.random(),1))     ));
                 repaint();
             }
         }).start();
@@ -111,7 +111,7 @@ class randomPts extends JPanel
         }
         g.setTransform(def);
     }
-    public static void main()
+    public static void main(String[] aaa)
     {
         JFrame f=new JFrame("Random points");
         f.add(new randomPts());

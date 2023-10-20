@@ -18,6 +18,7 @@
         *
         {
             user-select: none;
+            overflow:hidden;
         }
         body
         {
@@ -132,6 +133,22 @@
             g.lineWidth=10
             update()
         })
+        let resolution=1
+        document.addEventListener("wheel",(e)=>{
+            console.log("scroll",e.deltaY/1000)
+            resolution+=e.deltaY/100;
+            if(resolution<1)
+            resolution=1
+            update()
+        })
+        setTimeout(()=>
+        {
+            setInterval(()=>{
+                resolution+=0.1
+                update()
+                console.log(resolution,"fdsa")
+            },50)
+        },5000)
         document.addEventListener("keydown",(e)=>{
             console.log(e)
             switch(e.key)
@@ -169,16 +186,31 @@
                     first_d.x=-(first_d.x-first.x)+first.x
                     first_d.y=-(first_d.y-first.y)+first.y
                 }
-                for(let i=0;i<=1;i+=0.001)
+                g.strokeStyle="white"
+                g.lineWidth=2
+                g.beginPath()
+                for(let i=0;i<=1;i+=1/(!spc.checked?resolution:100))
                 {
-                    let p11=sectF(first,first_d,i)
-                    let p12=sectF(first_d,second_d,i)
-                    let p13=sectF(second_d,second,i)
-                    let p21=sectF(p11,p12,i)
-                    let p22=sectF(p12,p13,i)
-                    let p3=sectF(p21,p22,i)
-                    g.fillRect(p3.x,p3.y,10,10)
+                    let p12=sectF(first,first_d,i)
+                    let p23=sectF(first_d,second_d,i)
+                    let p34=sectF(second_d,second,i)
+                    let p12_23=sectF(p12,p23,i)
+                    let p23_34=sectF(p23,p34,i)
+                    let P=sectF(p12_23,p23_34,i)
+                    g.lineTo(P.x,P.y)
+                    if(spc.checked)
+                    {
+                        continue
+                    }
+                    g.moveTo(p12.x,p12.y);
+                    g.lineTo(p23.x,p23.y);
+                    g.moveTo(p23.x,p23.y)
+                    g.lineTo(p34.x,p34.y);
+                    g.moveTo(p12_23.x,p12_23.y)
+                    g.lineTo(p23_34.x,p23_34.y)
+                    g.moveTo(P.x,P.y)
                 }
+                g.stroke()
                 if(spc.checked)
                 continue
                 g.strokeStyle="red"
